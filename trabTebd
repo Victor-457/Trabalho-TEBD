@@ -6,21 +6,27 @@ struct Materia
 	conceito
 	situacao
 end
-
-struct Boletim
-
-end
-
 struct Aluno
-
+	cpf
+	nome
+	universidade
+	curso
 end
 
 struct Periodo
+	ano
 	semestre
+	materia
 end
 
+struct historico
+	periodo
+end
 
-
+struct Boletim
+	aluno
+	historico
+end
 
 function desempacotarXML(     ARQUIVO XML       )
 
