@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:element name="methodCall">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="methodName">
+            	<xs:simpleType>
+				    <xs:restriction base="xs:string">
+				      <xs:enumeration value="submeter"/>
+				      <xs:enumeration value="consultarStatus"/>
+				    </xs:restriction>
+				  </xs:simpleType>
+            </xs:element>
+            <xs:element name="params">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="param">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:choice>
+                                        <xs:element name="cpf" type="xs:string"/>
+                                        <xs:element ref="boletim"/>
+                                    </xs:choice>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<!-- Complex Elements -->
+<xs:element name="aluno">
+    <xs:complexType>
+    <xs:sequence>
+        <xs:element type="xs:string" name="cpf"/>
+        <xs:element type="xs:string" name="nome"/>
+        <xs:element type="xs:string" name="universidade"/>
+        <xs:element type="xs:string" name="curso"/>
+    </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="materia">
+    <xs:complexType>
+    <xs:sequence>
+        <xs:element type="xs:string" name="codigo"/>
+        <xs:element type="xs:string" name="nome"/>
+        <xs:element type="xs:string" name="creditos"/>
+        <xs:element type="xs:string" name="conceito"/>
+        <xs:element type="xs:string" name="situacao"/>
+    </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="periodo">
+    <xs:complexType>
+        <xs:sequence>
+        <xs:element type="xs:string" name="ano"/>
+        <xs:element type="xs:string" name="semestre"/>
+        <xs:element ref="materia" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="historico">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="periodo" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="boletim">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="aluno"/>
+            <xs:element ref="historico"/>
+        </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
