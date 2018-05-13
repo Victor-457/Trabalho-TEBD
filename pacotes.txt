@@ -1,4 +1,0 @@
-Pkg.clone("https://github.com/amellnik/Joseki.jl.git") //usado para o servidor
-Pkg.add("LightXML")
- Pkg.clone("https://github.com/simonpoulding/DataGeneratorTranslators.jl")
- Pkg.clone("https://github.com/simonpoulding/DataGenerators.jl")

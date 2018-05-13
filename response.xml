@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:element name="methodReturn">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="methodName">
+            	<xs:simpleType>
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="submeter"/>
+                  <xs:enumeration value="consultarStatus"/>
+                </xs:restriction>
+				  	</xs:simpleType>
+            </xs:element>
+            <xs:element name="value" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+</xs:schema>

@@ -1,51 +1,117 @@
-using Joseki, JSON, PyCall
+using Joseki, JSON, PyCall, HTTP, LightXML
 @pyimport lxml.etree as etree
 
-### Create some endpoints
+function response(req,code,methodName)
+    req.response.body = "<methodReturn>
+                                            <methodName>$methodName</methodName>
+                                            <value>$code</value>
+                                        </methodReturn>"
+    return req.response
+end
 
-# This function takes two numbers x and y from the query string and returns x^y
-# In this case they need to be identified by name and it should be called with
-# something like 'http://localhost:8000/pow/?x=2&y=3'
-
-function validateXML(xml_path::String, xsd_path::String)
+function validateXML(xml_doc, xsd_path::String)
     xmlschema_doc = etree.parse(xsd_path)
     
     xmlschema = etree.XMLSchema(xmlschema_doc)
-    try
-        xml_doc = etree.parse(xml_path)
-    catch
-        return -1 #xml mal formado
-    end
+
     result = xmlschema[:validate](xml_doc)
 
     return result #true valido, false invalido
 end
 
-function consultar(req::HTTP.Request)
+#consulta o status da inscrição do candidato com o CPF informado como parâmetro. 
+#Possíveis retornos: 0 - Candidato não encontrado, 1 - Em processamento, 
+#2 - Candidato Aprovado e Selecionado, 3 - Candidato Aprovado e em Espera, 4 - Candidato Não Aprovado.
+
+function consultarStatus(req::HTTP.Request)
+    
+    req.response.headers[3] = "Content-Type" => "text/xml; charset=utf-8"
     j = HTTP.queryparams(HTTP.URI(req.target))
-    if !(haskey(j, "x")&haskey(j, "y"))
-        return error_responder(req, "You need to specify values for x and y!")
+    xml = " "
+    for key in keys(j)
+        xml = key
     end
-    # Try to parse the values as numbers.  If there's an error here the generic
-    # error handler will deal with it.
-    x = parse(Float32, j["x"])
-    y = parse(Float32, j["y"])
-    result = validateXML("shiporder.xml","shiporder.xsd")
-    print(result)
-    json_responder(req, result) #mudar para responder xml
+    
+    try
+        xml_doc = etree.fromstring(xml)
+        result = validateXML(xml_doc,"request.xml")
+        
+        if result == false
+            return response(req,-1,"consultarStatus") # xml invalido 
+        else
+            try
+                nomeMetodo = xml_doc[:find](".//methodName")[:text]
+                if nomeMetodo != "consultarStatus"
+                    return response(req,-1,"consultarStatus") #xml invalido
+                else  
+                    cpf = xml_doc[:find](".//cpf")[:text]
+                    if cpf == "00000000000"
+                        return response(req,0,"consultarStatus")
+                    elseif cpf == "00000000001"
+                        return response(req,1,"consultarStatus")
+                    elseif cpf == "00000000002"
+                        return response(req,2,"consultarStatus")
+                    elseif cpf == "00000000003"
+                        return response(req,3,"consultarStatus")
+                    elseif cpf == "00000000004"
+                        return response(req,4,"consultarStatus")
+                    else
+                        return response(req,0,"consultarStatus") #cpf nao encontrado
+                    end 
+
+                end
+            catch
+                return response(req,-1,"consultarStatus") #xml invalido
+            end
+        end
+    catch
+        return response(req,-2,"consultarStatus") #xml mal formado
+    end
 end
 
-# This function takes two numbers n and k from a JSON-encoded request
-# body and returns binomial(n, k)
+#envia um boletim como parâmetro e retorna um número inteiro 
+#(0 - sucesso, 1 - XML inválido, 2 - XML mal-formado, 3 - Erro Interno)
+
 function submeter(req::HTTP.Request)
-   #logica aqui
+    req.response.headers[3] = "Content-Type" => "text/xml; charset=utf-8"
+    try
+        xml_doc = etree.fromstring(String(req.body))
+        try
+            result = validateXML(xml_doc,"request.xml")
+            if result == false
+                return response(req,1,"submeter") # xml invalido 
+            else
+                try
+                    nomeMetodo = xml_doc[:find](".//methodName")[:text]
+                    if nomeMetodo != "submeter"
+                        return response(req,1,"submeter") #xml invalido
+                    else
+                        try
+                            alun = xml_doc[:find](".//aluno")[:text]
+                        catch
+                            return response(req,1,"submeter") #xml invalido, tentou passar xml da consulta
+                        end     
+                            return response(req,0,"submeter") #sucesso
+                        
+                    end
+                catch
+                    return response(req,3,"submeter") # erro interno 
+                end
+            end
+        catch
+            return response(req,3,"submeter") # erro interno 
+        end
+    catch
+        return response(req,2,"submeter") #xml mal formado
+    end
 end
+
 
 ### Create and run the server
 
 # Make a router and add routes for our endpoints.
 endpoints = [
-    (consultar, "GET", "/"),
+    (consultarStatus, "GET", "/"),
     (submeter, "POST", "/")
 ]
 s = Joseki.server(endpoints)
